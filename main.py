@@ -1,42 +1,27 @@
 import streamlit as st
-from concurrent.futures import ThreadPoolExecutor
-import json
-from openai import OpenAI
-from neo4j import GraphDatabase
-
-# Import your existing functions
+from concurrent.futures import ThreadPoolExecutor  # optional now
 from rag_pipeline import (
-    embed_model,
     route_to_graphs,
-    retrieve_from_company,
+    retrieve_multi,
     answer_with_docs,
 )
 
-# Streamlit page config
 st.set_page_config(page_title="ESG GraphRAG Assistant", layout="wide")
-
-# Ollama client
-client = OpenAI(
-    base_url="http://localhost:11434/v1",
-    api_key="ollama",
-)
-
-# Neo4j driver
-driver = GraphDatabase.driver(
-    "neo4j://localhost:7687",
-    auth=("neo4j", "graphgraph")
-)
 
 st.title("🔍 ESG GraphRAG Assistant")
 st.caption("Ask ESG questions. The router selects relevant company graphs (Meta, Google, Nvidia).")
 
-question = st.text_input("Ask a question:", placeholder="e.g. compare google and meta scope 1 emissions")
+question = st.text_input(
+    "Ask a question:",
+    placeholder="e.g. compare google and meta scope 1 emissions"
+)
 
 if st.button("Run Query"):
     if not question.strip():
         st.warning("Please enter a question.")
         st.stop()
 
+    # Step 1 – Routing
     st.write("### Step 1 — Routing to graphs...")
     with st.spinner("Selecting relevant graph databases..."):
         companies = route_to_graphs(question)
@@ -46,27 +31,15 @@ if st.button("Run Query"):
     st.write("---")
     st.write("### Step 2 — Retrieving relevant chunks from Neo4j")
 
-    # Parallel retrieval
-    # Parallel retrieval for speed
-    with ThreadPoolExecutor() as executor:
-        futures = {
-            executor.submit(retrieve_from_company, question, comp): comp
-            for comp in companies
-        }
-
-        results = {
-            comp: future.result()
-            for future, comp in futures.items()
-        }
-
+    # Use your retrieve_multi helper (parallel inside)
+    with st.spinner("Retrieving from Neo4j..."):
+        results = retrieve_multi(question, companies, k=4)
 
     st.success("Retrieved data from the selected graphs!")
 
     # UI: display chunks
-    for company in results:
-        st.write(f"#### 📚 Retrieved Documents: {company.upper()}")
-        docs = results[company]
-
+    for company, docs in results.items():
+        st.write(f"#### Retrieved Documents: {company.upper()}")
         if not docs:
             st.warning(f"No relevant documents found in {company.upper()}.")
             continue
@@ -82,5 +55,5 @@ if st.button("Run Query"):
         final_answer = answer_with_docs(question, results, model="mistral:latest")
 
     st.success("Final answer generated!")
-    st.write("## 🧠 Answer:")
+    st.write("## Answer:")
     st.write(final_answer)
