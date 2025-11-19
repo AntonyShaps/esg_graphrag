@@ -1,10 +1,10 @@
 import streamlit as st
-from concurrent.futures import ThreadPoolExecutor  # optional now
 from rag_pipeline import (
     route_to_graphs,
     retrieve_multi,
-    answer_with_docs,
+    answer_with_docs
 )
+
 
 st.set_page_config(page_title="ESG GraphRAG Assistant", layout="wide")
 
@@ -57,3 +57,4 @@ if st.button("Run Query"):
     st.success("Final answer generated!")
     st.write("## Answer:")
     st.write(final_answer)
+

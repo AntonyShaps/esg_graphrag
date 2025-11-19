@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+
 
 import concurrent.futures
 from openai import OpenAI
@@ -9,10 +9,13 @@ from sentence_transformers import SentenceTransformer
 
 
 # Ollama (OpenAI-compatible)
-client = OpenAI(
-    base_url="http://localhost:11434/v1",
-    api_key="ollama",
-)
+def get_llm_client():
+    return OpenAI(
+        base_url="http://localhost:11434/v1",
+        api_key="ollama",
+    )
+
+client = get_llm_client()
 
 # Neo4j driver
 driver = GraphDatabase.driver(
@@ -67,12 +70,6 @@ Your ONLY task is:
 - Decide which company names appear: ["meta", "google", "nvidia"]
 - Return them in the parameter `graphs` as a list of strings.
 
-RULES:
-- ALWAYS call the tool. NEVER answer directly.
-- If the question contains multiple companies, include all of them.
-- If the question does not mention any company, return ["meta"].
-- Do NOT think, do NOT explain, do NOT justify.
-- You MUST output a tool call.
 """
 
 
@@ -140,6 +137,7 @@ def retrieve_multi(question: str, companies: list[str], k: int = 4):
         for future in futures:
             company = futures[future]
             results[company] = future.result()
+
         return results
     
 
