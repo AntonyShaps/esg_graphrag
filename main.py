@@ -52,7 +52,7 @@ if st.button("Run Query"):
     st.write("### Step 3 — Generating final answer")
 
     with st.spinner("Using Mistral (Ollama) to write final answer..."):
-        final_answer = answer_with_docs(question, results, model="mistral:latest")
+        final_answer = answer_with_docs(question, results, model="mistral:7b")
 
     st.success("Final answer generated!")
     st.write("## Answer:")
