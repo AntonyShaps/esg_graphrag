@@ -19,7 +19,7 @@ client = get_llm_client()
 
 # Neo4j driver
 driver = GraphDatabase.driver(
-    "neo4j://localhost:7687",
+    "bolt://localhost:7687",
     auth=("neo4j", "graphgraph")
 )
 
@@ -81,7 +81,7 @@ def route_to_graphs(question: str) -> list[str]:
     ]
 
     resp = client.chat.completions.create(
-        model="mistral:latest",
+        model="mistral:7b",
         messages=messages,
         tools=router_tools,
         tool_choice="auto",   # forces tool
@@ -164,7 +164,7 @@ Your task:
 """
 
 
-def answer_with_docs(question: str, retrieved: dict, model="mistral:latest"):
+def answer_with_docs(question: str, retrieved: dict, model="mistral:7b"):
     text = ""
 
     for company, docs in retrieved.items():
